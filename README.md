@@ -1,2 +1,2 @@
 # Database-programs
-Folder for the (mostly student) projects (to be) where focus has been on using databases
+Folder for the (mostly TUNI so far) projects (to be) where focus has been on using databases
