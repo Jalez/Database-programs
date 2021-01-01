@@ -1,0 +1,9 @@
+T1: Lisätään Kauppisen maansiirtofirmalle (asiakkaalle) uusi työkohde 'Tyämaakatu 1':
+Luetaan Kauppisen maansiirtofirman a_id relaatiosta asiakas,
+Luetaan työmaan osoite relaatiosta työkohde, 
+Talletetaan tämä a_id ja osoite relaatioon hallinnoi
+
+T2: Tallennetaan työkohteeseen liittyvät tuntityöt ja käytetyistä tarvikkeista tiedot päivän päätteeksi
+Talletetaan 8 tuntia töitä (lkm) relaation 'sisältää' riville, jossa s_id = työmaan sopimuksen ID  ja m_id = työntekijän ID
+Talletetaan 2 metriä käytettyä sähköjohtoa 'sisältää' riville, jossa s_id = työmaan sopimuksen Id ja m_id = materiaalin tunnus
+ 

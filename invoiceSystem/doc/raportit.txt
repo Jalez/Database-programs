@@ -1,0 +1,178 @@
+R1: Muodosta hinta-arvio kohteeseen x, joka sisältää sunnittelua 3 tuntia, asennustyötä 12 tuntia, 3m sähköjohtoa ja 1kpl pistorasian.
+
+Haetaan "työ"-taulusta tuntihinta, jonka tyyppi on "suunnittelu" sekä tuntihinta työlle, jonka tyyppi on "asennus". Haetaan "tarvike"-taulusta hinta tarvikkeelle, jonka nimi on "sähköjohto" ja hinta tarvikkeelle, jonka nimi on "pistorasia". Kerrotaan kukin tyyppi määrällä ja lisätään saadut tulot yhteen.
+
+
+
+R2: Tuntityölasku tarvittavine tietoineen: asiakastiedot, tarvvikkeet, tuntierittely, kokonaissumma, vähennyskelpoisuus
+
+Asiakastiedot: Haetaan sopimus_id:llä sopimus, jonka asiakas_id:llä haetaan asiakas-taulusta asiaakkaan tiedot.
+Tarvikkeet: Haetaan työkokonaisuus-taulusta sopimus_id:llä työkokonaisuus, jonka id:llä haetaan tarvikeluettelot, joiden id:illä haetaan tarvikkeet ja niiden kappalehinnat sekä lukumäärät.
+Tuntierittely: Haetaan samaan tapaan kuin tarvikkeet: työsuoritus-taulusta työkokonaisuus-id:llä työsuorituksista tunnit ja vähennyskelpoisuus, joista haetaan työ_tyyppi-avaimella tuntihinta. 
+Kokonaissumma: Lasketaan edellisestä tarvikkeet ja tuntierittely yhteen.
+
+
+--R1: Muodosta hinta-arvio kohteeseen x, joka sisältää sunnittelua 3 tuntia, asennustyötä 12 tuntia, 3m sähköjohtoa ja 1kpl pistorasian.
+-- Haetaan "työ"-taulusta tuntihinta, jonka tyyppi on "suunnittelu"--
+SELECT tuntihinta 
+FROM työ 
+WHERE työ_tyyppi = 'suunnittelu';
+
+Saadaan: suunnittelu = 55.
+
+-- Saadaan käyttäjältä tiedoksi, että suunnittelua on 3 tuntia. --
+-- Lisätään nämä tiedot kokonaissummaan. 
+
+-- Haetaan "työ"-taulusta tuntihinta, jonka tyyppi on "asennustyö"--
+SELECT tuntihinta
+FROM työ
+WHERE työ_tyyppi = 'asennustyö';
+
+-- Saadaan: asennustyö = 45.
+-- Saadaan käyttäjältä tiedoksi, että asennustyötä on 12 tuntia. --
+-- Lisätään nämä tiedot kokonaissummaan. 
+
+--Haetaan "tarvike"-taulusta hinta tarvikkeelle, jonka nimi on "sähköjohto" --
+SELECT myyntihinta
+FROM tarvike
+WHERE tarvike_nimi = 'sähköjohto';
+
+Saadaan: sähköjohto = 2. 
+
+-- Saadaan: sähköjohto = 2.
+-- Saadaan käyttäjältä tiedoksi, että sähköjohtoa on 3 metriä. --
+-- Lisätään nämä tiedot kokonaissummaan. 
+
+--Haetaan "tarvike"-taulusta hinta tarvikkeelle, jonka nimi on "pistorasia"--
+SELECT myyntihinta
+FROM tarvike
+WHERE tarvike_nimi = 'pistorasia';
+
+-- Saadaan: pistorasia = 10.
+-- Saadaan käyttäjältä tiedoksi, että pistorasioita on 1 metri. --
+-- Lisätään nämä tiedot kokonaissummaan. 
+
+-- Tämän jälkeen käyttäjä kertoo ohjelmalle, että kaikki halutut tuotteet on syötetty
+-- Järjestelmässä seuraa käyttäjälle hinta-arvio, joka oli siis edellä annettujen syötteiden perusteella
+-- Seuraavanlainen:
+Hinta-arvio = suunnittelu * 3 + asennustyö * 12 + sähköjohto * 3 + pistorasia * 1 = 721 euroa.
+
+################################################
+
+
+-- R2: Tuntityölasku tarvittavine tietoineen: asiakastiedot, tarvikkeet, tuntierittely, kokonaissumma, vähennyskelpoisuus -- 
+
+-- Halutaan sopimuksen x (= 100 tässä) tuntityölasku tarvittavine tietoineen. 
+
+-- Asiakastiedot: Haetaan sopimus_id:llä sopimus, jonka kohde_id:llä haetaan asiakas-taulusta asiaakkaan tiedot.
+SELECT asiakas.asiakas_id, asiakas_nimi, asiakas_osoite
+FROM sopimus, työkohde, asiakas
+WHERE sopimus_id = x AND sopimus.kohde_id = työkohde.kohde_id AND työkohde.asiakas_id = asiakas.asiakas_id;
+
+ asiakas_id |   asiakas_nimi    | asiakas_osoite
+------------+-------------------+----------------
+        121 | Matti Meikäläinen | Hämeenkatu 6
+
+
+--Tarvikkeet: Haetaan tarvikeluettelo-taulusta sopimus_id:llä sopimuksen tarvikkeet. näiden tarvikkeiden id:llä haetaan tarviketiedot, kuten nimi, lukumäärät, kappalehinnat sekä myyntikohtaiset voimassaolevat alennukset.
+SELECT tarvike_nimi, lkm, myyntihinta, alennus, alv
+FROM tarvikeluettelo, tarvike
+WHERE sopimus_id = 100 AND tarvikeluettelo.tarvike_id = tarvike.tarvike_id;
+
+ tarvike_nimi  | lkm | myyntihinta | alennus | alv
+---------------+-----+-------------+---------+-----
+ pistorasia    |  10 |          10 |      30 |  24
+ naulakiinnike |   2 |           2 |      30 |  24
+ sähköjohto    |   3 |           2 |      0 |  24
+
+
+-- Saadaan 3 muuttujaa: tarvike_nimi, lkm sekä sopimukseen liittynyt alennus.-- 
+
+-- Tuntierittely: Haetaan samaan tapaan kuin tarvikkeet: työsuoritus-taulusta työkokonaisuus-id:llä työsuorituksista tunnit ja vähennyskelpoisuus, joista haetaan työ_tyyppi-avaimella tuntihinta. --
+SELECT työsuoritus.työ_tyyppi, tuntihinta, tunnit, alennus, alv
+FROM työsuoritus, työ
+WHERE sopimus_id = 100 AND työsuoritus.työ_tyyppi = työ.työ_tyyppi;
+
+ työ_tyyppi  | tuntihinta | tunnit | alennus | alv
+-------------+------------+--------+---------+-----
+ suunnittelu |         55 |     15 |      10 |  24
+ asennustyö  |         45 |     20 |      15 |  24
+
+
+-- kotitalousvähennyskelpoisuus: Haetaan sopimus-taulun kohde_id ja työkohde-taulun kohde_id:n avulla sen sopimuksen vähennyskelpoisuusindikaattori-attribuutti, joka koskee kyseistä sopimusta.
+
+SELECT vähennyskelpoisuus
+FROM työkohde, sopimus
+WHERE sopimus_id = x AND työkohde.kohde_id = sopimus.kohde_id;
+
+ vähennyskelpoisuus
+--------------------
+ E
+
+--Käyttiksessä hoidetaan kokonaissumman laskenta--
+--Kokonaissumma: Lasketaan edellisestä tarvikkeet ja tuntierittelyt yhteen.--
+--Tämän jälkeen, jos kohde on kotitalousvähennyskelpoinen (tässä ei), vähennetään 
+-- kokonaissummasta kotitalousvähennyksen määrä?
+--Kun edellä mainitut tiedot on haettu, käyttöjärjestelmä tulostaa tuntilaskun, jossa esiintyy seuraavia tietoja:
+-- Asiakas:
+asiakas_id: 121
+asiakas_nimi: Matti Meikäläinen
+asiakas_osoite: Hämeenkatu 6
+
+-- Tarvikkeet:
+
+tarvike_nimi   | lkm | myyntihinta | alennus | alv | maksettavaa |
+---------------+-----+-------------+---------+-----+------------
+ pistorasia    |  10 |          10 |      30 |  24 |       86.8  |
+ naulakiinnike |   2 |           2 |      30 |  24 |       3.48  |
+ sähköjohto    |   3 |           2 |      0  |  24 |       7.44  |
+
+Yhteensä: 97.72 euroa
+
+-- Laskutettavan työn tuntierottelu:
+ työ_tyyppi  | tuntihinta | tunnit | alennus | alv | maksettavaa |
+-------------+------------+--------+---------+-----+-------------
+ suunnittelu |         55 |     15 |      10 |  24 |      920.7  |
+ asennustyö  |         45 |     20 |      15 |  24 |      948.6  |
+
+Yhteensä: 1896.3 euroa
+
+Kohteen kotitalousvähennyskelpoisuus: Ei.
+
+
+Laskun Kokonaissumma: 1994.
+
+################################################
+
+--R3 -- 
+-- Annetaan suunnittelutyölle 10% alennus--
+-- Valitaan sopimuksen x työsuorituksista se, joka on suunnittelu, ja päivitetään tähän 10% alennus.
+UPDATE työsuoritus
+SET alennus = 10
+WHERE sopimus_id = 100 AND työsuoritus.työ_tyyppi = 'suunnittelu';
+
+-- Annetaan kaikille tarvikkeille  20% alennus --
+-- Päivitettään koko tarvikeluettelo niin, että asetetaan 20 % alennus sille sopimukselle, jossa sopimus_id = x.
+UPDATE tarvikeluettelo
+SET alennus = 20
+WHERE sopimus_id = 100;
+
+-- Annetaan sähköjohdolle vain 10% alennus--
+-- Valitaan taas sopimuksen x tarvikeluettelosta se, jonka nimi on tarvike-taulussa "sähköjohto".
+-- Annetaan tälle 10% alennus. 
+UPDATE tarvikeluettelo
+SET alennus = 10
+FROM tarvike
+WHERE sopimus_id = 100 AND tarvikeluettelo.tarvike_id = tarvike.tarvike_id AND tarvike_nimi = 'sähköjohto';
+
+-- Lisätään tarvikkeisiin opaskirja (jossa alv 10)
+INSERT INTO tarvike VALUES(01, 'opaskirja', 'kpl', 100, 5, 10, 10);
+
+-- Lisätään tämä kyseiseen sopimukseen tuotteeksi. Annetaan sillekin samalla 20% alennus.
+INSERT INTO tarvikeluettelo VALUES(100, 01, 1, 20);
+
+-- Tässä raportissa oli oleellista lisätä alennukset ennen verojen laskentaa.
+-- Nyt huom: Kaikki tietokantaan syötetyt hinnat ovat verottomia hintoja -- 
+-- Alennukset aina huomioidaan käyttöjärjestelmässä, jossa verottomasta hinnasta vähennetään alennus. 
+-- Kun tämä on tehty, alv lisätään hintaan ohjelmassa. --
+-- Tuntityölaskun tulostamiseen käytetääm samaa metodia kuin Raportissa 2. Tilan säästämiseksi tätä ei toisteta. 
